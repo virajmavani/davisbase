@@ -1,0 +1,63 @@
+# Adopted from:
+# https://github.com/codecov/example-cpp11-cmake/blob/2036ea/.travis.yml
+language: cpp
+
+matrix:
+  include:
+  - name: "Debug/Coverage"
+    os: linux
+    dist: xenial
+    env: BUILD=debug MYCXX=g++-8 GCOV=gcov-8
+    addons:
+      apt:
+        update: true
+        sources:
+          - sourceline: 'ppa:mhier/libboost-latest'
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-8
+          - g++-8
+          - libboost1.67-dev
+  - name: "Release"
+    os: linux
+    dist: xenial
+    env: BUILD=release MYCXX=g++-8
+    addons:
+      apt:
+        update: true
+        sources:
+          - sourceline: 'ppa:mhier/libboost-latest'
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-8
+          - g++-8
+          - libboost1.67-dev
+  - name: "Code Format"
+    os: linux
+    dist: xenial
+    env: CLANG_FORMAT=clang-format-8
+    addons:
+      apt:
+        update: true
+        sources:
+          - sourceline: 'ppa:mhier/libboost-latest'
+          - sourceline: 'deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main'
+            key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+        packages:
+          - clang-format-8
+  - name: "Docker Container"
+    os: linux
+    env: DOCKER=1
+    services:
+    - docker
+
+before_install:
+  - |
+    export CXX=${MYCXX:-$CXX}
+    if [ ! -z "${GCOV:-}" ]; then
+      wget http://downloads.sourceforge.net/ltp/lcov-1.14.tar.gz
+      tar xzvf lcov-1.14.tar.gz
+      export PATH="`pwd`/lcov-1.14/bin:${PATH:-}"
+    fi
+script: ci/build.sh
+after_success: ci/build-success.sh
